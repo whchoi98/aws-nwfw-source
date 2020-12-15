@@ -1,6 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "Single AZ – AWS Network Firewall and traffic flow, 10.1.0.0/16"
-
+Description: "Single VPC/Single AZ – AWS Network Firewall and traffic flow, 10.1.0.0/16"
 Metadata:
   "AWS::CloudFormation::Interface":
     ParameterGroups:
@@ -9,8 +8,12 @@ Metadata:
         Parameters:
           - AvailabilityZoneA
 #         - AvailabilityZoneB
+#         - AvailabilityZoneC
+#         - AvailabilityZoneD
 
-# AZ Parameters
+#################
+# AZ Parameters #
+#################
 
 Parameters:
   AvailabilityZoneA:
@@ -20,18 +23,42 @@ Parameters:
 #  AvailabilityZoneB:
 #    Description: "Choose AZ2 for your VPC."
 #    Type: AWS::EC2::AvailabilityZone::Name
-#    Default: "ap-northeast-2"
+#    Default: "us-west-2"
+#  AvailabilityZoneC:
+#    Description: "Choose AZ2 for your VPC."
+#    Type: AWS::EC2::AvailabilityZone::Name
+#    Default: "us-west-2"
+#  AvailabilityZoneD:
+#    Description: "Choose AZ2 for your VPC."
+#    Type: AWS::EC2::AvailabilityZone::Name
+#    Default: "us-west-2"
+
+###############
+# EC2 Keypair #
+###############
+
   KeyPair:
     Description: "Keypair to access the EC2 Instance"
     Type: "AWS::EC2::KeyPair::KeyName"
     Default: "JAN-2021-whchoi"
+
+##############
+# EC2 AMI ID #
+##############
+
   LatestAmiId:
     Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
     Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
 
+##############
+# Resource   #
+##############
+
 Resources:
 
-# Create VPC1
+###############
+# Create VPC1 #
+###############
 
   VPC1:
     Type: AWS::EC2::VPC
@@ -46,7 +73,9 @@ Resources:
         - Key: project
           Value: VPC1
 
-# Create VPC1FWSubnet1
+########################
+# Create VPC1FWSubnet1 #
+########################
 
   VPC1FWSubnet1:
     Type: AWS::EC2::Subnet
@@ -59,7 +88,31 @@ Resources:
         - Key: Name
           Value: VPC1-FWSubnet1
 
-# Create VPC1ProtectSubnet1
+####################################
+# Create VPC1FWSubnet1 Route Table #
+####################################
+
+  VPC1FWSubnet1RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC1
+      Tags:
+        - Key: Name
+          Value: VPC1-FWSubnet1-RT
+
+######################################################
+# VPC1FWSubnet1 Accsociate VPC1FWSubnet1 Route Table #
+######################################################
+
+  VPC1FWSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref VPC1FWSubnet1RouteTable
+      SubnetId: !Ref VPC1FWSubnet1
+
+#############################
+# Create VPC1ProtectSubnet1 #
+#############################
 
   VPC1ProtectSubnet1:
     Type: AWS::EC2::Subnet
@@ -72,17 +125,9 @@ Resources:
         - Key: Name
           Value: VPC1-ProtectSubnet1
 
-# Create VPC1FWSubnet1 Route Table
-
-  VPC1FWSubnet1RouteTable:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId: !Ref VPC1
-      Tags:
-        - Key: Name
-          Value: VPC1-FWSubnet1-RT
-
-# Create VPC1FWSubnet1 Route Table
+####################################
+# Create VPC1FWSubnet1 Route Table #
+####################################
 
   VPC1ProtectSubnet1RouteTable:
     Type: AWS::EC2::RouteTable
@@ -92,15 +137,9 @@ Resources:
         - Key: Name
           Value: VPC1-ProtectSubnet1-RT
 
-# VPC1FWSubnet1 Accsociate VPC1FWSubnet1 Route Table
-
-  VPC1FWSubnet1RouteTableAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      RouteTableId: !Ref VPC1FWSubnet1RouteTable
-      SubnetId: !Ref VPC1FWSubnet1
-
-# VPC1ProtectSubnet1 Accsociate VPC1ProtectSubnet1 Route Table
+################################################################
+# VPC1ProtectSubnet1 Accsociate VPC1ProtectSubnet1 Route Table #
+################################################################
 
   VPC1ProtectSubnet1RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
@@ -108,7 +147,9 @@ Resources:
       RouteTableId: !Ref VPC1ProtectSubnet1RouteTable
       SubnetId: !Ref VPC1ProtectSubnet1
 
-# Create VPC1 IGW
+###################
+# Create VPC1 IGW #
+###################
 
   VPC1InternetGateway:
     Type: AWS::EC2::InternetGateway
@@ -123,15 +164,9 @@ Resources:
       VpcId: !Ref VPC1
       InternetGatewayId: !Ref VPC1InternetGateway
 
-  ITOCTANKDirectInternetRoute:
-    Type: AWS::EC2::Route
-    DependsOn: ITOCTANKInternetGateway
-    Properties:
-      DestinationCidrBlock: 0.0.0.0/0
-      GatewayId: !Ref VPC1InternetGateway
-      RouteTableId: !Ref 
-
-# VPC1 ServerRole
+###################
+# VPC1 ServerRole #
+###################
 
   ServerRoleSSM:
     Type: AWS::IAM::Role
@@ -157,7 +192,9 @@ Resources:
       Roles: 
         - !Ref ServerRoleSSM
 
-# VPC1 Security Group - HTTP, HTTPS, ICMP , SSH Permit 
+########################################################
+# VPC1 Security Group - HTTP, HTTPS, ICMP , SSH Permit #
+########################################################
 
   VPC1Ec2SecGroup:
     Type: AWS::EC2::SecurityGroup
@@ -185,8 +222,10 @@ Resources:
       Tags:
         - Key: Name
           Value: VPC1-SG
-          
-# VPC1 EC2 Create
+
+###################
+# VPC1 EC2 Create #
+###################
 
   VPC1ProtectSubnet1Ec201:
     Type: AWS::EC2::Instance
@@ -203,7 +242,7 @@ Resources:
       IamInstanceProfile: !Ref InstanceProfileSSM
       Tags:
         - Key: Name
-          Value: Protect-EC2-01
+          Value: Protect-EC2-101
       UserData:
         Fn::Base64:
           Fn::Sub: |
@@ -237,7 +276,7 @@ Resources:
       IamInstanceProfile: !Ref InstanceProfileSSM
       Tags:
         - Key: Name
-          Value: Protect-EC2-02
+          Value: Protect-EC2-102
       UserData:
         Fn::Base64:
           Fn::Sub: |
@@ -255,6 +294,10 @@ Resources:
             sudo git clone https://github.com/whchoi98/ec2meta-webpage.git
             sudo systemctl restart httpd
             exit         
+
+###############################
+# VPC1 SystemManager Endpoint #
+###############################
   
   VPC1SSMEndpoint:
     Type: AWS::EC2::VPCEndpoint
