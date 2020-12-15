@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "Single VPC/Single AZ – AWS Network Firewall and traffic flow, 10.1.0.0/16"
+Description: "Single VPC/Single AZ , AWS Network Firewall , 10.1.0.0/16"
 Metadata:
   "AWS::CloudFormation::Interface":
     ParameterGroups:
@@ -298,7 +298,7 @@ Resources:
 ###############################
 # VPC1 SystemManager Endpoint #
 ###############################
-  
+
   VPC1SSMEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
