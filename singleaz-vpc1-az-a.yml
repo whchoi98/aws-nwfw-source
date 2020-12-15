@@ -220,13 +220,7 @@ Resources:
             cd /var/www/html/
             sudo git clone https://github.com/whchoi98/ec2meta-webpage.git
             sudo systemctl restart httpd
-            cd /home/ec2-user/
-            sudo git clone https://github.com/whchoi98/TGW_CF.git
-            cd /home/ec2-user/TGW_CF/
-            sudo -s
-            cat hostfile >> /etc/hosts
-            chmode 755 ./pingshell.sh
-            exit            
+            exit       
     
   VPC1ProtectSubnet1Ec202:
     Type: AWS::EC2::Instance
@@ -260,13 +254,7 @@ Resources:
             cd /var/www/html/
             sudo git clone https://github.com/whchoi98/ec2meta-webpage.git
             sudo systemctl restart httpd
-            cd /home/ec2-user/
-            sudo git clone https://github.com/whchoi98/TGW_CF.git
-            cd /home/ec2-user/TGW_CF/
-            sudo -s
-            cat hostfile >> /etc/hosts
-            chmode 755 ./pingshell.sh
-            exit            
+            exit         
   
   VPC1SSMEndpoint:
     Type: AWS::EC2::VPCEndpoint
