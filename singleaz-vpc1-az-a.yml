@@ -242,11 +242,11 @@ Resources:
       IamInstanceProfile: !Ref InstanceProfileSSM
       Tags:
         - Key: Name
-          Value: Protect-EC2-101
+          Value: Protect-EC2-10-1-1-101
       UserData:
         Fn::Base64:
-          Fn::Sub: |
-            #!/bin/sh
+          !Sub |
+            #!/bin/bash
             sudo yum -y update
             sudo yum -y install yum-utils 
             sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
@@ -276,7 +276,7 @@ Resources:
       IamInstanceProfile: !Ref InstanceProfileSSM
       Tags:
         - Key: Name
-          Value: Protect-EC2-102
+          Value: Protect-EC2-10-1-1-102
       UserData:
         Fn::Base64:
           Fn::Sub: |
