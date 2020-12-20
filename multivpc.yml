@@ -1,0 +1,934 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Single VPC/Single AZ , AWS Network Firewall , 10.1.0.0/16"
+Metadata:
+  "AWS::CloudFormation::Interface":
+    ParameterGroups:
+      - Label:
+          default: "VPC Parameters"
+        Parameters:
+          - AvailabilityZoneA
+          - AvailabilityZoneB
+          - AvailabilityZoneC
+          - AvailabilityZoneD
+
+#################
+# AZ Parameters #
+#################
+
+Parameters:
+  AvailabilityZoneA:
+    Description: "Choose AZ1 for your VPC."
+    Type: AWS::EC2::AvailabilityZone::Name
+    Default: "us-west-2"
+#  AvailabilityZoneB:
+#    Description: "Choose AZ2 for your VPC."
+#    Type: AWS::EC2::AvailabilityZone::Name
+#    Default: "us-west-2"
+#  AvailabilityZoneC:
+#    Description: "Choose AZ2 for your VPC."
+#    Type: AWS::EC2::AvailabilityZone::Name
+#    Default: "us-west-2"
+#  AvailabilityZoneD:
+#    Description: "Choose AZ2 for your VPC."
+#    Type: AWS::EC2::AvailabilityZone::Name
+#    Default: "us-west-2"
+
+###############
+# EC2 Keypair #
+###############
+
+  KeyPair:
+    Description: "Keypair to access the EC2 Instance"
+    Type: "AWS::EC2::KeyPair::KeyName"
+    Default: "JAN-2021-whchoi"
+
+##############
+# EC2 AMI ID #
+##############
+
+  LatestAmiId:
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
+
+##############
+# Resource   #
+##############
+
+Resources:
+
+#################
+# Create VPC1-4 #
+#################
+
+  VPC1:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: "10.1.0.0/16"
+      EnableDnsSupport: "true"
+      EnableDnsHostnames: "true"
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: VPC1
+        - Key: project
+          Value: VPC1
+
+  VPC2:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: "10.2.0.0/16"
+      EnableDnsSupport: "true"
+      EnableDnsHostnames: "true"
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: VPC2
+        - Key: project
+          Value: VPC2
+
+  VPC3:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: "10.3.0.0/16"
+      EnableDnsSupport: "true"
+      EnableDnsHostnames: "true"
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: VPC3
+        - Key: project
+          Value: VPC3
+
+  VPC4:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: "10.4.0.0/16"
+      EnableDnsSupport: "true"
+      EnableDnsHostnames: "true"
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: VPC4
+        - Key: project
+          Value: VPC4
+###########################
+# Create VPC1-4 FWSubnet1 #
+###########################
+
+  VPC1FWSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC1
+      CidrBlock: "10.1.251.0/24"
+      AvailabilityZone: !Ref AvailabilityZoneA
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: VPC1-FWSubnet1
+
+  VPC1FWSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC2
+      CidrBlock: "10.2.251.0/24"
+      AvailabilityZone: !Ref AvailabilityZoneB
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: VPC2-FWSubnet1
+
+  VPC1FWSubnet3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC3
+      CidrBlock: "10.3.251.0/24"
+      AvailabilityZone: !Ref AvailabilityZoneC
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: VPC3-FWSubnet1
+
+  VPC1FWSubnet4:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC4
+      CidrBlock: "10.4.251.0/24"
+      AvailabilityZone: !Ref AvailabilityZoneD
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: VPC4-FWSubnet1
+
+#######################################
+# Create VPC1-4 FWSubnet1 Route Table #
+#######################################
+
+  VPC1FWSubnet1RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC1
+      Tags:
+        - Key: Name
+          Value: VPC1-FWSubnet1-RT
+
+  VPC2FWSubnet1RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC2
+      Tags:
+        - Key: Name
+          Value: VPC2-FWSubnet1-RT
+
+  VPC3FWSubnet1RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC3
+      Tags:
+        - Key: Name
+          Value: VPC3-FWSubnet1-RT
+
+  VPC4FWSubnet1RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC4
+      Tags:
+        - Key: Name
+          Value: VPC4-FWSubnet1-RT
+
+#########################################################
+# VPC1FWSubnet1 Accsociate VPC1-4 FWSubnet1 Route Table #
+#########################################################
+
+  VPC1FWSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref VPC1FWSubnet1RouteTable
+      SubnetId: !Ref VPC1FWSubnet1
+
+  VPC2FWSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref VPC2FWSubnet1RouteTable
+      SubnetId: !Ref VPC2FWSubnet1
+
+  VPC3FWSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref VPC3FWSubnet1RouteTable
+      SubnetId: !Ref VPC3FWSubnet1
+
+  VPC4FWSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref VPC4FWSubnet1RouteTable
+      SubnetId: !Ref VPC4FWSubnet1
+
+
+################################
+# Create VPC1-4 ProtectSubnet1 #
+################################
+
+  VPC1ProtectSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC1
+      CidrBlock: "10.1.1.0/24"
+      AvailabilityZone: !Ref AvailabilityZoneA
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: VPC1-ProtectSubnet1
+
+  VPC2ProtectSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC2
+      CidrBlock: "10.2.1.0/24"
+      AvailabilityZone: !Ref AvailabilityZoneA
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: VPC1-ProtectSubnet1
+
+  VPC3ProtectSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC3
+      CidrBlock: "10.3.1.0/24"
+      AvailabilityZone: !Ref AvailabilityZoneA
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: VPC3-ProtectSubnet1
+
+  VPC4ProtectSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC4
+      CidrBlock: "10.4.1.0/24"
+      AvailabilityZone: !Ref AvailabilityZoneA
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: VPC4-ProtectSubnet1
+
+#######################################
+# Create VPC1-4 FWSubnet1 Route Table #
+#######################################
+
+  VPC1ProtectSubnet1RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC1
+      Tags:
+        - Key: Name
+          Value: VPC1-ProtectSubnet1-RT
+
+  VPC2ProtectSubnet1RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC2
+      Tags:
+        - Key: Name
+          Value: VPC2-ProtectSubnet1-RT
+
+  VPC3ProtectSubnet1RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC3
+      Tags:
+        - Key: Name
+          Value: VPC3-ProtectSubnet1-RT
+
+  VPC4ProtectSubnet1RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC4
+      Tags:
+        - Key: Name
+          Value: VPC4-ProtectSubnet1-RT
+
+###################################################################
+# VPC1ProtectSubnet1 Accsociate VPC1-4 ProtectSubnet1 Route Table #
+###################################################################
+
+  VPC1ProtectSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref VPC1ProtectSubnet1RouteTable
+      SubnetId: !Ref VPC1ProtectSubnet1
+
+  VPC2ProtectSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref VPC2ProtectSubnet1RouteTable
+      SubnetId: !Ref VPC2ProtectSubnet1
+
+  VPC3ProtectSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref VPC3ProtectSubnet1RouteTable
+      SubnetId: !Ref VPC3ProtectSubnet1
+
+  VPC4ProtectSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref VPC4ProtectSubnet1RouteTable
+      SubnetId: !Ref VPC4ProtectSubnet1
+
+
+#####################
+# Create VPC1-4 IGW #
+#####################
+
+  VPC1InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: VPC1-IGW
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC1
+      InternetGatewayId: !Ref VPC1InternetGateway
+
+  VPC2InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: VPC2-IGW
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC2
+      InternetGatewayId: !Ref VPC2InternetGateway
+
+  VPC3InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: VPC3-IGW
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC3
+      InternetGatewayId: !Ref VPC3InternetGateway
+
+  VPC4InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: VPC4-IGW
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC4
+      InternetGatewayId: !Ref VPC4InternetGateway
+
+###################
+# VPC1 ServerRole #
+###################
+
+  ServerRoleSSM:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: NWFW-SSMRole
+      Path: "/"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+
+  InstanceProfileSSM:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: "/"
+      Roles: 
+        - !Ref ServerRoleSSM
+
+##########################################################
+# VPC1-4 Security Group - HTTP, HTTPS, ICMP , SSH Permit #
+##########################################################
+
+  VPC1Ec2SecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Open-up ports for ICMP and SSH,HTTP/S from All network
+      GroupName: VPC1SG
+      VpcId: !Ref VPC1
+      SecurityGroupIngress:
+        - IpProtocol: icmp
+          CidrIp: 0.0.0.0/0
+          FromPort: "-1"
+          ToPort: "-1"
+        - IpProtocol: tcp
+          CidrIp: 0.0.0.0/0
+          FromPort: "22"
+          ToPort: "22"
+        - IpProtocol: tcp
+          CidrIp: 0.0.0.0/0
+          FromPort: "80"
+          ToPort: "80"
+        - IpProtocol: tcp
+          CidrIp: 0.0.0.0/0
+          FromPort: "443"
+          ToPort: "443"
+      Tags:
+        - Key: Name
+          Value: VPC1-SG
+
+  VPC2Ec2SecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Open-up ports for ICMP and SSH,HTTP/S from All network
+      GroupName: VPC2SG
+      VpcId: !Ref VPC2
+      SecurityGroupIngress:
+        - IpProtocol: icmp
+          CidrIp: 0.0.0.0/0
+          FromPort: "-1"
+          ToPort: "-1"
+        - IpProtocol: tcp
+          CidrIp: 0.0.0.0/0
+          FromPort: "22"
+          ToPort: "22"
+        - IpProtocol: tcp
+          CidrIp: 0.0.0.0/0
+          FromPort: "80"
+          ToPort: "80"
+        - IpProtocol: tcp
+          CidrIp: 0.0.0.0/0
+          FromPort: "443"
+          ToPort: "443"
+      Tags:
+        - Key: Name
+          Value: VPC2-SG
+
+  VPC3Ec2SecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Open-up ports for ICMP and SSH,HTTP/S from All network
+      GroupName: VPC3SG
+      VpcId: !Ref VPC3
+      SecurityGroupIngress:
+        - IpProtocol: icmp
+          CidrIp: 0.0.0.0/0
+          FromPort: "-1"
+          ToPort: "-1"
+        - IpProtocol: tcp
+          CidrIp: 0.0.0.0/0
+          FromPort: "22"
+          ToPort: "22"
+        - IpProtocol: tcp
+          CidrIp: 0.0.0.0/0
+          FromPort: "80"
+          ToPort: "80"
+        - IpProtocol: tcp
+          CidrIp: 0.0.0.0/0
+          FromPort: "443"
+          ToPort: "443"
+      Tags:
+        - Key: Name
+          Value: VPC3-SG
+
+  VPC4Ec2SecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Open-up ports for ICMP and SSH,HTTP/S from All network
+      GroupName: VPC4SG
+      VpcId: !Ref VPC4
+      SecurityGroupIngress:
+        - IpProtocol: icmp
+          CidrIp: 0.0.0.0/0
+          FromPort: "-1"
+          ToPort: "-1"
+        - IpProtocol: tcp
+          CidrIp: 0.0.0.0/0
+          FromPort: "22"
+          ToPort: "22"
+        - IpProtocol: tcp
+          CidrIp: 0.0.0.0/0
+          FromPort: "80"
+          ToPort: "80"
+        - IpProtocol: tcp
+          CidrIp: 0.0.0.0/0
+          FromPort: "443"
+          ToPort: "443"
+      Tags:
+        - Key: Name
+          Value: VPC4-SG
+
+###################
+# VPC1-4 EC2 Create #
+###################
+
+  VPC1ProtectSubnet1Ec201:
+    Type: AWS::EC2::Instance
+    DependsOn: VPC1ProtectSubnet1
+    Properties:
+      SubnetId: !Ref VPC1ProtectSubnet1
+#     ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
+      ImageId: !Ref LatestAmiId
+      PrivateIpAddress: 10.1.1.101
+      InstanceType: t3.small
+      SecurityGroupIds: 
+        - Ref: VPC1Ec2SecGroup
+      KeyName: !Ref KeyPair
+      IamInstanceProfile: !Ref InstanceProfileSSM
+      Tags:
+        - Key: Name
+          Value: Protect-EC2-10-1-1-101
+      UserData:
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash
+            sudo yum -y update
+            sudo yum -y install yum-utils 
+            sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+            sudo yum -y install iotop iperf3 iptraf tcpdump git bash-completion 
+            sudo yum -y install httpd php mysql php-mysql 
+            sudo yum -y install python-pip
+            sudo yum -y install nethogs iftop lnav nmon tmux wireshark vsftpd ftp
+            sudo systemctl start httpd
+            sudo systemctl enable httpd
+            cd /var/www/html/
+            sudo git clone https://github.com/whchoi98/ec2meta-webpage.git
+            sudo systemctl restart httpd
+            exit       
+    
+  VPC1ProtectSubnet1Ec202:
+    Type: AWS::EC2::Instance
+    DependsOn: VPC1ProtectSubnet1
+    Properties:
+      SubnetId: !Ref VPC1ProtectSubnet1
+#     ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
+      ImageId: !Ref LatestAmiId
+      PrivateIpAddress: 10.1.1.102
+      InstanceType: t3.small
+      SecurityGroupIds: 
+        - Ref: VPC1Ec2SecGroup
+      KeyName: !Ref KeyPair
+      IamInstanceProfile: !Ref InstanceProfileSSM
+      Tags:
+        - Key: Name
+          Value: Protect-EC2-10-1-1-102
+      UserData:
+        Fn::Base64:
+          !Sub: |
+            #!/bin/bash
+            sudo yum -y update
+            sudo yum -y install yum-utils 
+            sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+            sudo yum -y install iotop iperf3 iptraf tcpdump git bash-completion 
+            sudo yum -y install httpd php mysql php-mysql 
+            sudo yum -y install python-pip
+            sudo yum -y install nethogs iftop lnav nmon tmux wireshark
+            sudo systemctl start httpd
+            sudo systemctl enable httpd
+            cd /var/www/html/
+            sudo git clone https://github.com/whchoi98/ec2meta-webpage.git
+            sudo systemctl restart httpd
+            exit         
+
+  VPC2ProtectSubnet1Ec201:
+    Type: AWS::EC2::Instance
+    DependsOn: VPC2ProtectSubnet1
+    Properties:
+      SubnetId: !Ref VPC2ProtectSubnet1
+#     ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
+      ImageId: !Ref LatestAmiId
+      PrivateIpAddress: 10.2.1.101
+      InstanceType: t3.small
+      SecurityGroupIds: 
+        - Ref: VPC2Ec2SecGroup
+      KeyName: !Ref KeyPair
+      IamInstanceProfile: !Ref InstanceProfileSSM
+      Tags:
+        - Key: Name
+          Value: Protect-EC2-10-2-1-101
+      UserData:
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash
+            sudo yum -y update
+            sudo yum -y install yum-utils 
+            sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+            sudo yum -y install iotop iperf3 iptraf tcpdump git bash-completion 
+            sudo yum -y install httpd php mysql php-mysql 
+            sudo yum -y install python-pip
+            sudo yum -y install nethogs iftop lnav nmon tmux wireshark vsftpd ftp
+            sudo systemctl start httpd
+            sudo systemctl enable httpd
+            cd /var/www/html/
+            sudo git clone https://github.com/whchoi98/ec2meta-webpage.git
+            sudo systemctl restart httpd
+            exit       
+    
+  VPC2ProtectSubnet1Ec202:
+    Type: AWS::EC2::Instance
+    DependsOn: VPC2ProtectSubnet1
+    Properties:
+      SubnetId: !Ref VPC2ProtectSubnet1
+#     ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
+      ImageId: !Ref LatestAmiId
+      PrivateIpAddress: 10.2.1.102
+      InstanceType: t3.small
+      SecurityGroupIds: 
+        - Ref: VPC2Ec2SecGroup
+      KeyName: !Ref KeyPair
+      IamInstanceProfile: !Ref InstanceProfileSSM
+      Tags:
+        - Key: Name
+          Value: Protect-EC2-10-2-1-102
+      UserData:
+        Fn::Base64:
+          !Sub: |
+            #!/bin/bash
+            sudo yum -y update
+            sudo yum -y install yum-utils 
+            sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+            sudo yum -y install iotop iperf3 iptraf tcpdump git bash-completion 
+            sudo yum -y install httpd php mysql php-mysql 
+            sudo yum -y install python-pip
+            sudo yum -y install nethogs iftop lnav nmon tmux wireshark
+            sudo systemctl start httpd
+            sudo systemctl enable httpd
+            cd /var/www/html/
+            sudo git clone https://github.com/whchoi98/ec2meta-webpage.git
+            sudo systemctl restart httpd
+            exit         
+
+  VPC3ProtectSubnet1Ec201:
+    Type: AWS::EC2::Instance
+    DependsOn: VPC3ProtectSubnet1
+    Properties:
+      SubnetId: !Ref VPC3ProtectSubnet1
+#     ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
+      ImageId: !Ref LatestAmiId
+      PrivateIpAddress: 10.1.1.101
+      InstanceType: t3.small
+      SecurityGroupIds: 
+        - Ref: VPC3Ec2SecGroup
+      KeyName: !Ref KeyPair
+      IamInstanceProfile: !Ref InstanceProfileSSM
+      Tags:
+        - Key: Name
+          Value: Protect-EC2-10-3-1-101
+      UserData:
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash
+            sudo yum -y update
+            sudo yum -y install yum-utils 
+            sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+            sudo yum -y install iotop iperf3 iptraf tcpdump git bash-completion 
+            sudo yum -y install httpd php mysql php-mysql 
+            sudo yum -y install python-pip
+            sudo yum -y install nethogs iftop lnav nmon tmux wireshark vsftpd ftp
+            sudo systemctl start httpd
+            sudo systemctl enable httpd
+            cd /var/www/html/
+            sudo git clone https://github.com/whchoi98/ec2meta-webpage.git
+            sudo systemctl restart httpd
+            exit       
+    
+  VPC1ProtectSubnet1Ec202:
+    Type: AWS::EC2::Instance
+    DependsOn: VPC3ProtectSubnet1
+    Properties:
+      SubnetId: !Ref VPC3ProtectSubnet1
+#     ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
+      ImageId: !Ref LatestAmiId
+      PrivateIpAddress: 10.3.1.102
+      InstanceType: t3.small
+      SecurityGroupIds: 
+        - Ref: VPC1Ec2SecGroup
+      KeyName: !Ref KeyPair
+      IamInstanceProfile: !Ref InstanceProfileSSM
+      Tags:
+        - Key: Name
+          Value: Protect-EC2-10-3-1-102
+      UserData:
+        Fn::Base64:
+          !Sub: |
+            #!/bin/bash
+            sudo yum -y update
+            sudo yum -y install yum-utils 
+            sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+            sudo yum -y install iotop iperf3 iptraf tcpdump git bash-completion 
+            sudo yum -y install httpd php mysql php-mysql 
+            sudo yum -y install python-pip
+            sudo yum -y install nethogs iftop lnav nmon tmux wireshark
+            sudo systemctl start httpd
+            sudo systemctl enable httpd
+            cd /var/www/html/
+            sudo git clone https://github.com/whchoi98/ec2meta-webpage.git
+            sudo systemctl restart httpd
+            exit         
+
+  VPC4ProtectSubnet1Ec201:
+    Type: AWS::EC2::Instance
+    DependsOn: VPC4ProtectSubnet1
+    Properties:
+      SubnetId: !Ref VPC4ProtectSubnet1
+#     ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
+      ImageId: !Ref LatestAmiId
+      PrivateIpAddress: 10.4.1.101
+      InstanceType: t3.small
+      SecurityGroupIds: 
+        - Ref: VPC4Ec2SecGroup
+      KeyName: !Ref KeyPair
+      IamInstanceProfile: !Ref InstanceProfileSSM
+      Tags:
+        - Key: Name
+          Value: Protect-EC2-10-4-1-101
+      UserData:
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash
+            sudo yum -y update
+            sudo yum -y install yum-utils 
+            sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+            sudo yum -y install iotop iperf3 iptraf tcpdump git bash-completion 
+            sudo yum -y install httpd php mysql php-mysql 
+            sudo yum -y install python-pip
+            sudo yum -y install nethogs iftop lnav nmon tmux wireshark vsftpd ftp
+            sudo systemctl start httpd
+            sudo systemctl enable httpd
+            cd /var/www/html/
+            sudo git clone https://github.com/whchoi98/ec2meta-webpage.git
+            sudo systemctl restart httpd
+            exit       
+    
+  VPC4ProtectSubnet1Ec202:
+    Type: AWS::EC2::Instance
+    DependsOn: VPC4ProtectSubnet1
+    Properties:
+      SubnetId: !Ref VPC4ProtectSubnet1
+#     ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
+      ImageId: !Ref LatestAmiId
+      PrivateIpAddress: 10.4.1.102
+      InstanceType: t3.small
+      SecurityGroupIds: 
+        - Ref: VPC4Ec2SecGroup
+      KeyName: !Ref KeyPair
+      IamInstanceProfile: !Ref InstanceProfileSSM
+      Tags:
+        - Key: Name
+          Value: Protect-EC2-10-4-1-102
+      UserData:
+        Fn::Base64:
+          !Sub: |
+            #!/bin/bash
+            sudo yum -y update
+            sudo yum -y install yum-utils 
+            sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+            sudo yum -y install iotop iperf3 iptraf tcpdump git bash-completion 
+            sudo yum -y install httpd php mysql php-mysql 
+            sudo yum -y install python-pip
+            sudo yum -y install nethogs iftop lnav nmon tmux wireshark
+            sudo systemctl start httpd
+            sudo systemctl enable httpd
+            cd /var/www/html/
+            sudo git clone https://github.com/whchoi98/ec2meta-webpage.git
+            sudo systemctl restart httpd
+            exit         
+
+#################################
+# VPC1-4 SystemManager Endpoint #
+#################################
+
+  VPC1SSMEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPC1
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssm"
+      VpcEndpointType: Interface
+      PrivateDnsEnabled: True
+      SubnetIds:
+        - Ref: VPC1ProtectSubnet1
+      SecurityGroupIds: 
+        - Ref: VPC1Ec2SecGroup
+      Tags:
+        - Key: Name
+          Value: VPC1-SSM-EP
+
+  VPC1SSMMEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPC1
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssmmessages"
+      VpcEndpointType: Interface
+      PrivateDnsEnabled: True
+      SubnetIds:
+        - Ref: VPC1ProtectSubnet1
+      SecurityGroupIds: 
+        - Ref: VPC1Ec2SecGroup
+      Tags:
+        - Key: Name
+          Value: VPC1-SSMM-EP
+
+  VPC2SSMEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPC2
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssm"
+      VpcEndpointType: Interface
+      PrivateDnsEnabled: True
+      SubnetIds:
+        - Ref: VPC2ProtectSubnet1
+      SecurityGroupIds: 
+        - Ref: VPC2Ec2SecGroup
+      Tags:
+        - Key: Name
+          Value: VPC2-SSM-EP
+
+  VPC2SSMMEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPC2
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssmmessages"
+      VpcEndpointType: Interface
+      PrivateDnsEnabled: True
+      SubnetIds:
+        - Ref: VPC2ProtectSubnet1
+      SecurityGroupIds: 
+        - Ref: VPC2Ec2SecGroup
+      Tags:
+        - Key: Name
+          Value: VPC2-SSMM-EP
+
+  VPC3SSMEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPC3
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssm"
+      VpcEndpointType: Interface
+      PrivateDnsEnabled: True
+      SubnetIds:
+        - Ref: VPC3ProtectSubnet1
+      SecurityGroupIds: 
+        - Ref: VPC3Ec2SecGroup
+      Tags:
+        - Key: Name
+          Value: VPC3-SSM-EP
+
+  VPC3SSMMEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPC3
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssmmessages"
+      VpcEndpointType: Interface
+      PrivateDnsEnabled: True
+      SubnetIds:
+        - Ref: VPC3ProtectSubnet1
+      SecurityGroupIds: 
+        - Ref: VPC3Ec2SecGroup
+      Tags:
+        - Key: Name
+          Value: VPC1-SSMM-EP
+
+  VPC4SSMEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPC4
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssm"
+      VpcEndpointType: Interface
+      PrivateDnsEnabled: True
+      SubnetIds:
+        - Ref: VPC4ProtectSubnet1
+      SecurityGroupIds: 
+        - Ref: VPC4Ec2SecGroup
+      Tags:
+        - Key: Name
+          Value: VPC4-SSM-EP
+
+  VPC4SSMMEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPC4
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssmmessages"
+      VpcEndpointType: Interface
+      PrivateDnsEnabled: True
+      SubnetIds:
+        - Ref: VPC4ProtectSubnet1
+      SecurityGroupIds: 
+        - Ref: VPC4Ec2SecGroup
+      Tags:
+        - Key: Name
+          Value: VPC4-SSMM-EP

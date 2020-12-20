@@ -7,9 +7,9 @@ Metadata:
           default: "VPC Parameters"
         Parameters:
           - AvailabilityZoneA
-#         - AvailabilityZoneB
-#         - AvailabilityZoneC
-#         - AvailabilityZoneD
+          - AvailabilityZoneB
+          - AvailabilityZoneC
+          - AvailabilityZoneD
 
 #################
 # AZ Parameters #
@@ -20,18 +20,18 @@ Parameters:
     Description: "Choose AZ1 for your VPC."
     Type: AWS::EC2::AvailabilityZone::Name
     Default: "us-west-2"
-#  AvailabilityZoneB:
-#    Description: "Choose AZ2 for your VPC."
-#    Type: AWS::EC2::AvailabilityZone::Name
-#    Default: "us-west-2"
-#  AvailabilityZoneC:
-#    Description: "Choose AZ2 for your VPC."
-#    Type: AWS::EC2::AvailabilityZone::Name
-#    Default: "us-west-2"
-#  AvailabilityZoneD:
-#    Description: "Choose AZ2 for your VPC."
-#    Type: AWS::EC2::AvailabilityZone::Name
-#    Default: "us-west-2"
+  AvailabilityZoneB:
+    Description: "Choose AZ2 for your VPC."
+    Type: AWS::EC2::AvailabilityZone::Name
+    Default: "us-west-2"
+  AvailabilityZoneC:
+    Description: "Choose AZ2 for your VPC."
+    Type: AWS::EC2::AvailabilityZone::Name
+    Default: "us-west-2"
+  AvailabilityZoneD:
+    Description: "Choose AZ2 for your VPC."
+    Type: AWS::EC2::AvailabilityZone::Name
+    Default: "us-west-2"
 
 ###############
 # EC2 Keypair #
@@ -56,9 +56,9 @@ Parameters:
 
 Resources:
 
-###############
-# Create VPC1 #
-###############
+#################
+# Create VPC1-4 #
+#################
 
   VPC1:
     Type: AWS::EC2::VPC
@@ -73,6 +73,18 @@ Resources:
         - Key: project
           Value: VPC1
 
+  VPC2:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: "10.1.0.0/16"
+      EnableDnsSupport: "true"
+      EnableDnsHostnames: "true"
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: VPC1
+        - Key: project
+          Value: VPC1
 ########################
 # Create VPC1FWSubnet1 #
 ########################
@@ -279,7 +291,7 @@ Resources:
           Value: Protect-EC2-10-1-1-102
       UserData:
         Fn::Base64:
-          !Sub: |
+          Fn::Sub: |
             #!/bin/bash
             sudo yum -y update
             sudo yum -y install yum-utils 
@@ -310,11 +322,8 @@ Resources:
         - Ref: VPC1ProtectSubnet1
       SecurityGroupIds: 
         - Ref: VPC1Ec2SecGroup
-      Tags:
-        - Key: Name
-          Value: VPC1-SSM-EP
 
-  VPC1SSMMEndpoint:
+  VPC1SSMMEndpointAOCTANK:
     Type: AWS::EC2::VPCEndpoint
     Properties:
       VpcId: !Ref VPC1
@@ -325,7 +334,4 @@ Resources:
         - Ref: VPC1ProtectSubnet1
       SecurityGroupIds: 
         - Ref: VPC1Ec2SecGroup
-      Tags:
-        - Key: Name
-          Value: VPC1-SSMM-EP
 
