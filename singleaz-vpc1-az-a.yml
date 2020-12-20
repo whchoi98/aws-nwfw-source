@@ -279,7 +279,7 @@ Resources:
           Value: Protect-EC2-10-1-1-102
       UserData:
         Fn::Base64:
-          !Sub: |
+          Fn::Sub: |
             #!/bin/bash
             sudo yum -y update
             sudo yum -y install yum-utils 

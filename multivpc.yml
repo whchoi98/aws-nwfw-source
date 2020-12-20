@@ -126,34 +126,34 @@ Resources:
         - Key: Name
           Value: VPC1-FWSubnet1
 
-  VPC1FWSubnet2:
+  VPC2FWSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC2
       CidrBlock: "10.2.251.0/24"
-      AvailabilityZone: !Ref AvailabilityZoneB
+      AvailabilityZone: !Ref AvailabilityZoneA
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
           Value: VPC2-FWSubnet1
 
-  VPC1FWSubnet3:
+  VPC3FWSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC3
       CidrBlock: "10.3.251.0/24"
-      AvailabilityZone: !Ref AvailabilityZoneC
+      AvailabilityZone: !Ref AvailabilityZoneA
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
           Value: VPC3-FWSubnet1
 
-  VPC1FWSubnet4:
+  VPC4FWSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC4
       CidrBlock: "10.4.251.0/24"
-      AvailabilityZone: !Ref AvailabilityZoneD
+      AvailabilityZone: !Ref AvailabilityZoneA
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
@@ -248,7 +248,7 @@ Resources:
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: VPC1-ProtectSubnet1
+          Value: VPC2-ProtectSubnet1
 
   VPC3ProtectSubnet1:
     Type: AWS::EC2::Subnet
@@ -589,7 +589,7 @@ Resources:
           Value: Protect-EC2-10-1-1-102
       UserData:
         Fn::Base64:
-          !Sub: |
+          !Sub |
             #!/bin/bash
             sudo yum -y update
             sudo yum -y install yum-utils 
@@ -597,7 +597,7 @@ Resources:
             sudo yum -y install iotop iperf3 iptraf tcpdump git bash-completion 
             sudo yum -y install httpd php mysql php-mysql 
             sudo yum -y install python-pip
-            sudo yum -y install nethogs iftop lnav nmon tmux wireshark
+            sudo yum -y install nethogs iftop lnav nmon tmux wireshark vsftpd ftp
             sudo systemctl start httpd
             sudo systemctl enable httpd
             cd /var/www/html/
@@ -657,7 +657,7 @@ Resources:
           Value: Protect-EC2-10-2-1-102
       UserData:
         Fn::Base64:
-          !Sub: |
+          !Sub |
             #!/bin/bash
             sudo yum -y update
             sudo yum -y install yum-utils 
@@ -665,7 +665,7 @@ Resources:
             sudo yum -y install iotop iperf3 iptraf tcpdump git bash-completion 
             sudo yum -y install httpd php mysql php-mysql 
             sudo yum -y install python-pip
-            sudo yum -y install nethogs iftop lnav nmon tmux wireshark
+            sudo yum -y install nethogs iftop lnav nmon tmux wireshark vsftpd ftp
             sudo systemctl start httpd
             sudo systemctl enable httpd
             cd /var/www/html/
@@ -680,7 +680,7 @@ Resources:
       SubnetId: !Ref VPC3ProtectSubnet1
 #     ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
       ImageId: !Ref LatestAmiId
-      PrivateIpAddress: 10.1.1.101
+      PrivateIpAddress: 10.3.1.101
       InstanceType: t3.small
       SecurityGroupIds: 
         - Ref: VPC3Ec2SecGroup
@@ -717,7 +717,7 @@ Resources:
       PrivateIpAddress: 10.3.1.102
       InstanceType: t3.small
       SecurityGroupIds: 
-        - Ref: VPC1Ec2SecGroup
+        - Ref: VPC3Ec2SecGroup
       KeyName: !Ref KeyPair
       IamInstanceProfile: !Ref InstanceProfileSSM
       Tags:
@@ -725,7 +725,7 @@ Resources:
           Value: Protect-EC2-10-3-1-102
       UserData:
         Fn::Base64:
-          !Sub: |
+          !Sub |
             #!/bin/bash
             sudo yum -y update
             sudo yum -y install yum-utils 
@@ -733,7 +733,7 @@ Resources:
             sudo yum -y install iotop iperf3 iptraf tcpdump git bash-completion 
             sudo yum -y install httpd php mysql php-mysql 
             sudo yum -y install python-pip
-            sudo yum -y install nethogs iftop lnav nmon tmux wireshark
+            sudo yum -y install nethogs iftop lnav nmon tmux wireshark vsftpd ftp
             sudo systemctl start httpd
             sudo systemctl enable httpd
             cd /var/www/html/
@@ -793,7 +793,7 @@ Resources:
           Value: Protect-EC2-10-4-1-102
       UserData:
         Fn::Base64:
-          !Sub: |
+          !Sub |
             #!/bin/bash
             sudo yum -y update
             sudo yum -y install yum-utils 
@@ -824,9 +824,6 @@ Resources:
         - Ref: VPC1ProtectSubnet1
       SecurityGroupIds: 
         - Ref: VPC1Ec2SecGroup
-      Tags:
-        - Key: Name
-          Value: VPC1-SSM-EP
 
   VPC1SSMMEndpoint:
     Type: AWS::EC2::VPCEndpoint
@@ -839,9 +836,6 @@ Resources:
         - Ref: VPC1ProtectSubnet1
       SecurityGroupIds: 
         - Ref: VPC1Ec2SecGroup
-      Tags:
-        - Key: Name
-          Value: VPC1-SSMM-EP
 
   VPC2SSMEndpoint:
     Type: AWS::EC2::VPCEndpoint
@@ -854,9 +848,6 @@ Resources:
         - Ref: VPC2ProtectSubnet1
       SecurityGroupIds: 
         - Ref: VPC2Ec2SecGroup
-      Tags:
-        - Key: Name
-          Value: VPC2-SSM-EP
 
   VPC2SSMMEndpoint:
     Type: AWS::EC2::VPCEndpoint
@@ -869,9 +860,6 @@ Resources:
         - Ref: VPC2ProtectSubnet1
       SecurityGroupIds: 
         - Ref: VPC2Ec2SecGroup
-      Tags:
-        - Key: Name
-          Value: VPC2-SSMM-EP
 
   VPC3SSMEndpoint:
     Type: AWS::EC2::VPCEndpoint
@@ -884,9 +872,6 @@ Resources:
         - Ref: VPC3ProtectSubnet1
       SecurityGroupIds: 
         - Ref: VPC3Ec2SecGroup
-      Tags:
-        - Key: Name
-          Value: VPC3-SSM-EP
 
   VPC3SSMMEndpoint:
     Type: AWS::EC2::VPCEndpoint
@@ -899,9 +884,6 @@ Resources:
         - Ref: VPC3ProtectSubnet1
       SecurityGroupIds: 
         - Ref: VPC3Ec2SecGroup
-      Tags:
-        - Key: Name
-          Value: VPC1-SSMM-EP
 
   VPC4SSMEndpoint:
     Type: AWS::EC2::VPCEndpoint
@@ -914,9 +896,6 @@ Resources:
         - Ref: VPC4ProtectSubnet1
       SecurityGroupIds: 
         - Ref: VPC4Ec2SecGroup
-      Tags:
-        - Key: Name
-          Value: VPC4-SSM-EP
 
   VPC4SSMMEndpoint:
     Type: AWS::EC2::VPCEndpoint
@@ -929,6 +908,3 @@ Resources:
         - Ref: VPC4ProtectSubnet1
       SecurityGroupIds: 
         - Ref: VPC4Ec2SecGroup
-      Tags:
-        - Key: Name
-          Value: VPC4-SSMM-EP
