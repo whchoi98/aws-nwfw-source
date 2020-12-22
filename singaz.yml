@@ -272,7 +272,7 @@ Resources:
       SecurityGroupIds: 
         - Ref: VPC1Ec2SecGroup
 
-  VPC1SSMMEndpointAOCTANK:
+  VPC1SSMMEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
       VpcId: !Ref VPC1
