@@ -19,19 +19,19 @@ Parameters:
   AvailabilityZoneA:
     Description: "Choose AZ1 for your VPC."
     Type: AWS::EC2::AvailabilityZone::Name
-    Default: "us-west-2"
+    Default: "ap-northeast-1"
 #  AvailabilityZoneB:
 #    Description: "Choose AZ2 for your VPC."
 #    Type: AWS::EC2::AvailabilityZone::Name
-#    Default: "us-west-2"
+#    Default: "ap-northeast-1"
 #  AvailabilityZoneC:
 #    Description: "Choose AZ2 for your VPC."
 #    Type: AWS::EC2::AvailabilityZone::Name
-#    Default: "us-west-2"
+#    Default: "ap-northeast-1"
 #  AvailabilityZoneD:
 #    Description: "Choose AZ2 for your VPC."
 #    Type: AWS::EC2::AvailabilityZone::Name
-#    Default: "us-west-2"
+#    Default: "ap-northeast-1"
 
 ###############
 # EC2 Keypair #
@@ -40,7 +40,7 @@ Parameters:
   KeyPair:
     Description: "Keypair to access the EC2 Instance"
     Type: "AWS::EC2::KeyPair::KeyName"
-    Default: "JAN-2021-whchoi"
+    Default: "anfwkey"
 
 ##############
 # EC2 AMI ID #
@@ -310,9 +310,7 @@ Resources:
         - Ref: VPC1ProtectSubnet1
       SecurityGroupIds: 
         - Ref: VPC1Ec2SecGroup
-      Tags:
-        - Key: Name
-          Value: VPC1-SSM-EP
+
 
   VPC1SSMMEndpoint:
     Type: AWS::EC2::VPCEndpoint
@@ -325,7 +323,5 @@ Resources:
         - Ref: VPC1ProtectSubnet1
       SecurityGroupIds: 
         - Ref: VPC1Ec2SecGroup
-      Tags:
-        - Key: Name
-          Value: VPC1-SSMM-EP
+
 
